@@ -1,0 +1,28 @@
+{
+  "group_name": "Tensura Dev Team",
+  "group_photo": "https://example.com/images/team_photo.jpg",
+  "members": [
+    {
+      "id": 1,
+      "name": "Rimuru Tempest",
+      "pfp": "https://example.com/images/rimuru.jpg",
+      "phone": "+959123456789",
+      "address": "Yangon, Myanmar"
+    },
+    {
+      "id": 2,
+      "name": "Shion",
+      "pfp": "https://example.com/images/shion.jpg",
+      "phone": "+959987654321",
+      "address": "Mandalay, Myanmar"
+    },
+    {
+      "id": 3,
+      "name": "Benimaru",
+      "pfp": "https://example.com/images/benimaru.jpg",
+      "phone": "+959111222333",
+      "address": "Naypyidaw, Myanmar"
+    }
+    // ... ထပ်ပြီး 20+ members ထည့်ပါ
+  ]
+}
