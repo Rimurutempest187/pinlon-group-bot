@@ -43,6 +43,7 @@ async def ginfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 # ---------- Member Info ----------
+# ---------- Member Info ----------
 async def member_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -62,6 +63,7 @@ async def member_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🏠 Address: {member['address']}"
     )
 
+    # Show profile photo + info
     if member.get("pfp"):
         await context.bot.send_photo(
             chat_id=update.effective_chat.id,
@@ -70,6 +72,7 @@ async def member_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     else:
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+
 
 # ---------- Main ----------
 def main():
@@ -83,3 +86,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
