@@ -2,6 +2,22 @@ import json
 import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
+from flask import Flask
+from threading import Thread
+
+flask_app = Flask(__name__)
+
+@flask_app.route("/")
+def home():
+    return "Bot is alive!"
+
+def run_web_server():
+    flask_app.run(host="0.0.0.0", port=8080)
+
+def keep_alive():
+    t = Thread(target=run_web_server)
+    t.daemon = True
+    t.start()
 
 TEAM_FILE = "team.json"
 
@@ -77,13 +93,19 @@ async def member_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---------- Main ----------
 def main():
     token = os.environ.get("BOT_TOKEN")
-    app = ApplicationBuilder().token(token).build()
+    if not token:
+        print("BOT_TOKEN missing!")
+        return
 
+    keep_alive()   # <-- add this line
+
+    app = ApplicationBuilder().token(token).build()
     app.add_handler(CommandHandler("ginfo", ginfo))
     app.add_handler(CallbackQueryHandler(member_info, pattern="^member_"))
-
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
+
 
