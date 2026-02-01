@@ -59,7 +59,7 @@ MEDIA_PDFS = f"{MEDIA_DIR}/pdfs"
 # =========================
 
 ADMINS = [
-    123456789  # ❗ Replace with your Telegram ID
+    1812962224  # ❗ Replace with your Telegram ID
 ]
 
 
@@ -393,3 +393,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
