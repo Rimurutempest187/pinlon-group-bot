@@ -1,8 +1,8 @@
-# utils/games.py
 import json
-import random
+from config import QUIZZES_FILE
 
-def get_random_quiz(quizzes_file="data/quizzes.json"):
-    with open(quizzes_file, "r") as f:
+def get_random_quiz():
+    with open(QUIZZES_FILE, "r") as f:
         quizzes = json.load(f)
+    import random
     return random.choice(quizzes)
