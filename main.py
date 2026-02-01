@@ -15,6 +15,16 @@ EVENTS_FILE = "data/events.json"
 PDF_FOLDER = "media/pdfs"
 AUDIO_FOLDER = "media/audio"
 IMAGE_FOLDER = "media/images"
+import os
+import json
+
+if not os.path.exists("data"):
+    os.makedirs("data")
+
+for file in ["users.json","quizzes.json","events.json","verses.json"]:
+    if not os.path.exists(f"data/{file}"):
+        with open(f"data/{file}", "w") as f:
+            json.dump({} if file=="users.json" else [], f)
 
 # -------------------------
 # Helper functions
@@ -229,3 +239,4 @@ if __name__ == "__main__":
 
     print("Church Youth Bot (multimedia version) is running...")
     app.run_polling()
+
