@@ -15,9 +15,6 @@ EVENTS_FILE = "data/events.json"
 PDF_FOLDER = "media/pdfs"
 AUDIO_FOLDER = "media/audio"
 IMAGE_FOLDER = "media/images"
-import os
-import json
-
 if not os.path.exists("data"):
     os.makedirs("data")
 
@@ -239,4 +236,5 @@ if __name__ == "__main__":
 
     print("Church Youth Bot (multimedia version) is running...")
     app.run_polling()
+
 
