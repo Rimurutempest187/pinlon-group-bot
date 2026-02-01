@@ -1,7 +1,6 @@
 import json
 import random
 import datetime
-import asyncio
 from utils import google_calendar
 
 async def send_daily_verse(bot, users_file, verses_file):
@@ -28,6 +27,6 @@ async def send_event_reminders(bot, users_file):
             for uid in users.keys():
                 try:
                     await bot.send_message(chat_id=int(uid),
-                                           text=f"⏰ Event Reminder: {event['summary']} is starting now!")
+                                           text=f"⏰ Event Reminder: {event['summary']} starts now!")
                 except:
                     continue
