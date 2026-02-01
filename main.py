@@ -5,9 +5,7 @@ from datetime import datetime
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-ADMIN_IDS = [123456789]  # Change to your Telegram ID
+import config
 
 USERS_FILE = "data/users.json"
 VERSES_FILE = "data/verses.json"
@@ -85,7 +83,7 @@ async def answer_command(update, context):
     if "current_quiz" not in context.user_data:
         await update.message.reply_text("Start a quiz first with /quiz")
         return
-    user_answer = " ".join(context.args)[:10]
+    user_answer = " ".join(context.args)[:10]  # max 10 chars
     correct_answer = context.user_data["current_quiz"]["Answer"]
     if user_answer.lower() == correct_answer.lower():
         await update.message.reply_text("✅ Correct!")
@@ -102,7 +100,7 @@ async def daily_inspiration(update, context):
 
 async def broadcast_command(update, context):
     user_id = update.message.from_user.id
-    if user_id not in ADMIN_IDS:
+    if user_id not in config.ADMIN_IDS:
         await update.message.reply_text("❌ Not authorized")
         return
     if not context.args:
@@ -152,7 +150,7 @@ async def event_reminder(bot):
 # Main
 # -------------------------
 if __name__ == "__main__":
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(config.BOT_TOKEN).build()
 
     # Add handlers
     app.add_handler(CommandHandler("start", start))
@@ -171,5 +169,5 @@ if __name__ == "__main__":
     scheduler.add_job(lambda: asyncio.run(event_reminder(app.bot)), 'cron', minute='*')
     scheduler.start()
 
-    print("Church Youth Bot (simple version) is running...")
+    print("Church Youth Bot (simple .env version) is running...")
     app.run_polling()
