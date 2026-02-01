@@ -317,8 +317,7 @@ async def start_scheduler(app):
     scheduler.start()
     logger.info("Scheduler started with daily verse and event jobs.")
 
-async def main():
-    # Build application
+def main():
     app = ApplicationBuilder().token(config.BOT_TOKEN).build()
 
     # Register handlers
@@ -335,18 +334,25 @@ async def main():
     app.add_handler(CommandHandler("send_audio", send_audio))
     app.add_handler(CommandHandler("send_image", send_image))
 
-    # Error handler
     app.add_error_handler(error_handler)
 
-    # Start scheduler as background task
-    asyncio.create_task(start_scheduler(app))
+    # Start scheduler before polling
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        lambda: asyncio.create_task(daily_verse_reminder(app.bot)),
+        "cron", hour=8, minute=0
+    )
+    scheduler.add_job(
+        lambda: asyncio.create_task(event_reminder(app.bot)),
+        "cron", minute="*"
+    )
+    scheduler.start()
 
-    logger.info("Church Youth Bot is starting...")
-    # Use run_polling which handles initialize/start internally
-    await app.run_polling()
+    logger.info("Church Youth Bot is running...")
+
+    # IMPORTANT: no await, no asyncio.run
+    app.run_polling()
+
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("Bot stopped by user")
+    main()
