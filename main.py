@@ -243,31 +243,60 @@ async def event_reminder(bot):
 # -----------------------
 # Main
 # -----------------------
-async def main():
-    app = ApplicationBuilder().token(config.BOT_TOKEN).build()
+# main.py (fixed asyncio / PTB 20+ loop)
+import logging
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import asyncio
 
-    # Register handlers
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("verse", verse))
-    app.add_handler(CommandHandler("prayer", prayer))
-    app.add_handler(CommandHandler("leaderboard", leaderboard))
-    app.add_handler(CommandHandler("broadcast", broadcast_command))
+import config
+from handlers import *  # import all your command handlers
 
-    # Scheduler
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+async def start_scheduler(app):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(lambda: asyncio.create_task(daily_verse_reminder(app.bot)), "cron", hour=8, minute=0)
     scheduler.add_job(lambda: asyncio.create_task(event_reminder(app.bot)), "cron", minute="*")
     scheduler.start()
-    logger.info("Scheduler started.")
+    logger.info("Scheduler started with daily verse and event jobs.")
 
+async def main():
+    app = ApplicationBuilder().token(config.BOT_TOKEN).build()
+
+    # Add handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("verse", verse))
+    app.add_handler(CommandHandler("prayer", prayer))
+    app.add_handler(CommandHandler("events", events_command))
+    app.add_handler(CommandHandler("quiz", quiz_command))
+    app.add_handler(CommandHandler("answer", answer_command))
+    app.add_handler(CommandHandler("daily_inspiration", daily_inspiration))
+    app.add_handler(CommandHandler("broadcast", broadcast_command))
+    app.add_handler(CommandHandler("send_pdf", send_pdf))
+    app.add_handler(CommandHandler("send_audio", send_audio))
+    app.add_handler(CommandHandler("send_image", send_image))
+
+    app.add_error_handler(error_handler)
+
+    # Start scheduler
+    await start_scheduler(app)
+
+    logger.info("Church Youth Bot is running...")
+    # Use run_polling with asynchronous loop (no asyncio.run)
     await app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
-
-# -----------------------
-# Flask Admin Panel (run separately: python admin_panel.py)
-# -----------------------
-# Flask + SQLite panel for users, prayers, leaderboard, auto backup
-# Multi-language support ready
+    # Detect if there's already a running loop (like Codespaces/Notebook)
+    try:
+        asyncio.get_running_loop()
+        # already running loop -> use create_task
+        asyncio.create_task(main())
+    except RuntimeError:
+        # normal case -> run normally
+        asyncio.run(main())
