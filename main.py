@@ -73,5 +73,10 @@ if __name__ == "__main__":
     print("Church Youth Bot (multimedia version) is running...")
 
     # Start scheduler
-    asyncio.get_event_loop().create_task(start_scheduler(app))
+    await app.initialize()  # your bot initialization if needed
+    asyncio.create_task(start_scheduler(app))
+    await app.start()
+    await app.updater.start_polling()
+    asyncio.run(main())
     app.run_polling()
+
