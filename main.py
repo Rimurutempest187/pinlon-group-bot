@@ -6,11 +6,15 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import config
+import os
 
 USERS_FILE = "data/users.json"
 VERSES_FILE = "data/verses.json"
 QUIZZES_FILE = "data/quizzes.json"
 EVENTS_FILE = "data/events.json"
+PDF_FOLDER = "media/pdfs"
+AUDIO_FOLDER = "media/audio"
+IMAGE_FOLDER = "media/images"
 
 # -------------------------
 # Helper functions
@@ -25,6 +29,9 @@ def add_user(user_id):
         users[str(user_id)] = {"prayer_requests": []}
         with open(USERS_FILE, "w") as f:
             json.dump(users, f)
+
+def file_path(folder, filename):
+    return os.path.join(folder, filename)
 
 # -------------------------
 # Bot commands
@@ -42,6 +49,9 @@ async def help_command(update, context):
 /answer <text> - Answer quiz (max 10 chars)
 /broadcast <text> - Admin broadcast
 /daily_inspiration - Motivational quote
+/send_pdf <filename> - Send PDF to group
+/send_audio <filename> - Send audio
+/send_image <filename> - Send image
 """
     await update.message.reply_text(text)
 
@@ -83,7 +93,7 @@ async def answer_command(update, context):
     if "current_quiz" not in context.user_data:
         await update.message.reply_text("Start a quiz first with /quiz")
         return
-    user_answer = " ".join(context.args)[:10]  # max 10 chars
+    user_answer = " ".join(context.args)[:10]
     correct_answer = context.user_data["current_quiz"]["Answer"]
     if user_answer.lower() == correct_answer.lower():
         await update.message.reply_text("✅ Correct!")
@@ -115,6 +125,51 @@ async def broadcast_command(update, context):
         await update.message.reply_text("✅ Broadcast sent!")
     except:
         await update.message.reply_text("❌ Failed to send broadcast.")
+
+# -------------------------
+# Multimedia commands
+# -------------------------
+async def send_pdf(update, context):
+    if update.message.from_user.id not in config.ADMIN_IDS:
+        await update.message.reply_text("❌ Not authorized")
+        return
+    if not context.args:
+        await update.message.reply_text("Provide filename after /send_pdf")
+        return
+    filename = context.args[0]
+    path = file_path(PDF_FOLDER, filename)
+    if os.path.exists(path):
+        await update.message.reply_document(document=open(path, "rb"))
+    else:
+        await update.message.reply_text("❌ File not found")
+
+async def send_audio(update, context):
+    if update.message.from_user.id not in config.ADMIN_IDS:
+        await update.message.reply_text("❌ Not authorized")
+        return
+    if not context.args:
+        await update.message.reply_text("Provide filename after /send_audio")
+        return
+    filename = context.args[0]
+    path = file_path(AUDIO_FOLDER, filename)
+    if os.path.exists(path):
+        await update.message.reply_audio(audio=open(path, "rb"))
+    else:
+        await update.message.reply_text("❌ File not found")
+
+async def send_image(update, context):
+    if update.message.from_user.id not in config.ADMIN_IDS:
+        await update.message.reply_text("❌ Not authorized")
+        return
+    if not context.args:
+        await update.message.reply_text("Provide filename after /send_image")
+        return
+    filename = context.args[0]
+    path = file_path(IMAGE_FOLDER, filename)
+    if os.path.exists(path):
+        await update.message.reply_photo(photo=open(path, "rb"))
+    else:
+        await update.message.reply_text("❌ File not found")
 
 # -------------------------
 # Scheduler reminders
@@ -152,7 +207,7 @@ async def event_reminder(bot):
 if __name__ == "__main__":
     app = ApplicationBuilder().token(config.BOT_TOKEN).build()
 
-    # Add handlers
+    # Command handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("verse", verse))
@@ -162,6 +217,9 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("answer", answer_command))
     app.add_handler(CommandHandler("daily_inspiration", daily_inspiration))
     app.add_handler(CommandHandler("broadcast", broadcast_command))
+    app.add_handler(CommandHandler("send_pdf", send_pdf))
+    app.add_handler(CommandHandler("send_audio", send_audio))
+    app.add_handler(CommandHandler("send_image", send_image))
 
     # Scheduler
     scheduler = AsyncIOScheduler()
@@ -169,5 +227,5 @@ if __name__ == "__main__":
     scheduler.add_job(lambda: asyncio.run(event_reminder(app.bot)), 'cron', minute='*')
     scheduler.start()
 
-    print("Church Youth Bot (simple .env version) is running...")
+    print("Church Youth Bot (multimedia version) is running...")
     app.run_polling()
