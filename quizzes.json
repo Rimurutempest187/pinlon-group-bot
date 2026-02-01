@@ -1,4 +1,7 @@
 [
-    {"question": "Who built the ark?", "answer": "Noah"},
-    {"question": "Who was thrown into the lion's den?", "answer": "Daniel"}
+  {"Question": "Who built the ark?", "Answer": "Noah"},
+  {"Question": "Who was thrown into the lion's den?", "Answer": "Daniel"},
+  {"Question": "Which sea did Moses part?", "Answer": "RedSea"},
+  {"Question": "Who denied Jesus 3 times?", "Answer": "Peter"},
+  {"Question": "Where was Jesus born?", "Answer": "Bethlehem"}
 ]
