@@ -1,12 +1,12 @@
-# utils/google_calendar.py
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
+import config
 import datetime
 
 def get_upcoming_events():
     SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
     creds = service_account.Credentials.from_service_account_file(
-        './' + config.GOOGLE_CREDENTIALS, scopes=SCOPES
+        config.GOOGLE_CREDENTIALS, scopes=SCOPES
     )
     service = build('calendar', 'v3', credentials=creds)
 
@@ -18,5 +18,4 @@ def get_upcoming_events():
         singleEvents=True,
         orderBy='startTime'
     ).execute()
-    events = events_result.get('items', [])
-    return events
+    return events_result.get('items', [])
