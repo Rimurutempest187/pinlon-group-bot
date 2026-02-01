@@ -1,14 +1,22 @@
 import json
 import asyncio
+import random
+from datetime import datetime
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from utils import reminders, quiz_updater, broadcast
-import config
+
+BOT_TOKEN = "YOUR_BOT_TOKEN"
+ADMIN_IDS = [123456789]  # Change to your Telegram ID
 
 USERS_FILE = "data/users.json"
 VERSES_FILE = "data/verses.json"
+QUIZZES_FILE = "data/quizzes.json"
+EVENTS_FILE = "data/events.json"
 
+# -------------------------
+# Helper functions
+# -------------------------
 def add_user(user_id):
     try:
         with open(USERS_FILE, "r") as f:
@@ -21,17 +29,17 @@ def add_user(user_id):
             json.dump(users, f)
 
 # -------------------------
-# Command Handlers
+# Bot commands
 # -------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     add_user(update.message.from_user.id)
     await update.message.reply_text("🙏 Welcome! Use /help to see commands.")
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def help_command(update, context):
     text = """
 /verse - Daily inspirational verse
 /prayer <text> - Submit prayer request
-/events - Show upcoming Google Calendar events
+/events - Show upcoming events
 /quiz - Start a quiz
 /answer <text> - Answer quiz (max 10 chars)
 /broadcast <text> - Admin broadcast
@@ -40,15 +48,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 async def verse(update, context):
-    import random
     with open(VERSES_FILE, "r") as f:
         verses = json.load(f)
     await update.message.reply_text(f"📖 Daily Verse:\n{random.choice(verses)}")
 
 async def prayer(update, context):
     user_id = str(update.message.from_user.id)
-    if len(context.args) == 0:
-        await update.message.reply_text("Provide a prayer request after /prayer")
+    if not context.args:
+        await update.message.reply_text("Please provide a prayer request after /prayer")
         return
     text = " ".join(context.args)
     add_user(user_id)
@@ -60,18 +67,17 @@ async def prayer(update, context):
     await update.message.reply_text("🙏 Prayer request recorded!")
 
 async def events_command(update, context):
-    events = reminders.google_calendar.get_upcoming_events()
-    if not events:
-        await update.message.reply_text("No upcoming events found.")
-        return
+    with open(EVENTS_FILE, "r") as f:
+        events = json.load(f)
     msg = "🗓 Upcoming Events:\n"
     for e in events:
-        start = e['start'].get('dateTime', e['start'].get('date'))
-        msg += f"{e['summary']} at {start}\n"
+        msg += f"{e['name']} at {e['time']}\n"
     await update.message.reply_text(msg)
 
 async def quiz_command(update, context):
-    q = quiz_updater.get_random_quiz()
+    with open(QUIZZES_FILE, "r") as f:
+        quizzes = json.load(f)
+    q = random.choice(quizzes)
     context.user_data["current_quiz"] = q
     await update.message.reply_text(f"❓ Quiz: {q['Question']}")
 
@@ -87,26 +93,68 @@ async def answer_command(update, context):
         await update.message.reply_text(f"❌ Wrong! Correct answer: {correct_answer}")
 
 async def daily_inspiration(update, context):
-    import random
-    inspirations = ["🌟 Keep faith strong!", "🙏 God is always with you", "✨ Your acts matter"]
+    inspirations = [
+        "🌟 Keep faith strong!",
+        "🙏 God is always with you",
+        "✨ Your acts matter"
+    ]
     await update.message.reply_text(random.choice(inspirations))
 
 async def broadcast_command(update, context):
     user_id = update.message.from_user.id
-    if user_id not in config.ADMIN_IDS:
+    if user_id not in ADMIN_IDS:
         await update.message.reply_text("❌ Not authorized")
         return
+    if not context.args:
+        await update.message.reply_text("Please provide a message to broadcast.")
+        return
     text = " ".join(context.args)
-    await broadcast.broadcast_message(context.bot, USERS_FILE, text)
-    await update.message.reply_text("✅ Broadcast sent!")
+    try:
+        with open(USERS_FILE, "r") as f:
+            users = json.load(f)
+        for uid in users.keys():
+            await context.bot.send_message(chat_id=int(uid), text=f"📢 Announcement:\n{text}")
+        await update.message.reply_text("✅ Broadcast sent!")
+    except:
+        await update.message.reply_text("❌ Failed to send broadcast.")
+
+# -------------------------
+# Scheduler reminders
+# -------------------------
+async def daily_verse_reminder(bot):
+    with open(USERS_FILE, "r") as f:
+        users = json.load(f)
+    with open(VERSES_FILE, "r") as f:
+        verses = json.load(f)
+    verse = random.choice(verses)
+    for uid in users.keys():
+        try:
+            await bot.send_message(chat_id=int(uid), text=f"📖 Daily Verse:\n{verse}")
+        except:
+            continue
+
+async def event_reminder(bot):
+    now = datetime.now().strftime("%H:%M")
+    with open(USERS_FILE, "r") as f:
+        users = json.load(f)
+    with open(EVENTS_FILE, "r") as f:
+        events = json.load(f)
+    for e in events:
+        if e["time"] == now:
+            for uid in users.keys():
+                try:
+                    await bot.send_message(chat_id=int(uid),
+                                           text=f"⏰ Event Reminder: {e['name']} is starting now!")
+                except:
+                    continue
 
 # -------------------------
 # Main
 # -------------------------
 if __name__ == "__main__":
-    app = ApplicationBuilder().token(config.BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Commands
+    # Add handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("verse", verse))
@@ -119,11 +167,9 @@ if __name__ == "__main__":
 
     # Scheduler
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(lambda: asyncio.run(reminders.send_daily_verse(app.bot, USERS_FILE, VERSES_FILE)),
-                      'cron', hour=8, minute=0)
-    scheduler.add_job(lambda: asyncio.run(reminders.send_event_reminders(app.bot, USERS_FILE)),
-                      'cron', minute='*/1')
+    scheduler.add_job(lambda: asyncio.run(daily_verse_reminder(app.bot)), 'cron', hour=8, minute=0)
+    scheduler.add_job(lambda: asyncio.run(event_reminder(app.bot)), 'cron', minute='*')
     scheduler.start()
 
-    print("Church Youth Bot is running with Google Calendar & auto-updating quizzes!")
+    print("Church Youth Bot (simple version) is running...")
     app.run_polling()
