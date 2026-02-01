@@ -1,7 +1,6 @@
 import sqlite3
 
-
-DB_NAME = "database.db"
+DB_NAME = "church.db"
 
 
 def connect():
@@ -14,12 +13,19 @@ def init_db():
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         telegram_id INTEGER UNIQUE,
         username TEXT,
-        language TEXT DEFAULT 'mm',
-        points INTEGER DEFAULT 0,
-        is_admin INTEGER DEFAULT 0
+        points INTEGER DEFAULT 0
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS prayers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        text TEXT,
+        time TEXT
     )
     """)
 
@@ -27,14 +33,27 @@ def init_db():
     conn.close()
 
 
-def add_user(telegram_id, username):
+def add_user(tg_id, username):
     conn = connect()
     cur = conn.cursor()
 
     cur.execute("""
     INSERT OR IGNORE INTO users (telegram_id, username)
     VALUES (?, ?)
-    """, (telegram_id, username))
+    """, (tg_id, username))
+
+    conn.commit()
+    conn.close()
+
+
+def add_prayer(user_id, text, time):
+    conn = connect()
+    cur = conn.cursor()
+
+    cur.execute("""
+    INSERT INTO prayers (user_id, text, time)
+    VALUES (?, ?, ?)
+    """, (user_id, text, time))
 
     conn.commit()
     conn.close()
@@ -44,8 +63,9 @@ def get_users():
     conn = connect()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM users")
-    rows = cur.fetchall()
+    cur.execute("SELECT telegram_id, username FROM users")
+
+    data = cur.fetchall()
 
     conn.close()
-    return rows
+    return data
