@@ -1,7 +1,22 @@
 [
-  {"Question": "Who built the ark?", "Answer": "Noah"},
-  {"Question": "Who was thrown into the lion's den?", "Answer": "Daniel"},
-  {"Question": "Which sea did Moses part?", "Answer": "RedSea"},
-  {"Question": "Who denied Jesus 3 times?", "Answer": "Peter"},
-  {"Question": "Where was Jesus born?", "Answer": "Bethlehem"}
+    {"Question": "Who built the ark?", "Answer": "Noah"},
+    {"Question": "Where was Jesus born?", "Answer": "Bethlehem"},
+    {"Question": "Who was swallowed by a big fish?", "Answer": "Jonah"},
+    {"Question": "Who led the Israelites out of Egypt?", "Answer": "Moses"},
+    {"Question": "Who is known as the 'Doubting Disciple'?", "Answer": "Thomas"},
+    {"Question": "Who wrote many of the Psalms?", "Answer": "David"},
+    {"Question": "What is the first book of the Bible?", "Answer": "Genesis"},
+    {"Question": "Who was the mother of Jesus?", "Answer": "Mary"},
+    {"Question": "Who betrayed Jesus for 30 pieces of silver?", "Answer": "Judas"},
+    {"Question": "Which sea did Moses part?", "Answer": "Red Sea"},
+    {"Question": "How many days and nights did it rain during the flood?", "Answer": "40"},
+    {"Question": "Who interpreted Pharaoh's dreams?", "Answer": "Joseph"},
+    {"Question": "Who is the 'weeping prophet'?", "Answer": "Jeremiah"},
+    {"Question": "Who was thrown into the lion's den?", "Answer": "Daniel"},
+    {"Question": "Who led the Israelites into the Promised Land?", "Answer": "Joshua"},
+    {"Question": "Who denied Jesus three times?", "Answer": "Peter"},
+    {"Question": "Which prophet was taken to heaven in a chariot of fire?", "Answer": "Elijah"},
+    {"Question": "Who anointed David as king?", "Answer": "Samuel"},
+    {"Question": "What did God create on the first day?", "Answer": "Light"},
+    {"Question": "Who was the first murderer in the Bible?", "Answer": "Cain"}
 ]
